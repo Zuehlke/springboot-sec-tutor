@@ -15,6 +15,7 @@ In most cases the SSL implementing part is the HTTP server you front your applic
 - Configuration
 - Scalable
 - Most up-to-date SSL implementations
+
 #### Cons
 - Not truly end-to-end (The traffic between HTTP server and your application (servlet container) might be unencrypted)
 
@@ -23,6 +24,7 @@ This is unusual but can be done. Example implementation and current secure confi
 #### Pros
 - Truly end-to-end encryption
 - Scalable (extra Loadbalancer required)
+
 #### Cons
 - Java SSL implementation (not easily or not configurable at all, e.g. DHparams)
 - Keystore file instead of pem/crt/key files
