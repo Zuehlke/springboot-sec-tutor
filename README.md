@@ -23,11 +23,20 @@ In most cases the SSL implementing part is the HTTP server you front your applic
 This is unusual but can be done. Example implementation and current secure configuration using embedded tomcat can be found in this repository.
 #### Pros
 - Truly end-to-end encryption
-- Scalable (extra Loadbalancer required)
 
 #### Cons
-- Java SSL implementation (not easily or not configurable at all, e.g. custom DHparams in Java 1.8)
+- Configuration. Java SSL implementation (not easily or not configurable at all, e.g. custom DHparams in Java 1.8)
 - Keystore file instead of pem/crt/key files
+- Scalability complicated (extra Loadbalancer required. Also certificate must be n-times deployed)
+
+### Cloud (AWS) *cloud enviroment*
+Mostly the SSL is terminated on the Loadbalancer. AWS lets you create signed certificate (in ACM) and add it to your LB/CloudFront or upload your own signed certificate to IAM and refer it in your LB/CloudFront.
+#### Pros
+- Easy SSL implementation
+- Scalable
+#### Cons
+- Not truly end-to-end if terminated on LB (see [http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/configuring-https-endtoend.html])
+- Configuration. Not fine grained: You can choose from predefined set of SSL Security Policies
 
 ### SSL configuration
 Now that the implementing part is known, the question is what to consider a secure SSL config. Therefore you want to check the following sites:
@@ -41,12 +50,20 @@ Now that the implementing part is known, the question is what to consider a secu
 For apache documentation refer to:
 - [http://httpd.apache.org/docs/trunk/ssl/ssl_howto.html] example apache ssl configuration (including TSLv1.2 only, SSLCompression, SSLHonorCipherOrder, SSLSessionTickets)
 
-*TODO*
+For AWS LB HTTPS configuration refer to:
+- [http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-add-or-delete-listeners.html] how to add a certificate to you LB
+- [http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-ssl-security-policy.html] ssl configuration
+
+### SSL security check **Important**!
+Once the configuration is done and you think you did everything right, its time to face the truth. Deploy your app and check your ssl configuration with [https://www.ssllabs.com/ssltest/]. Fix configuration until you have at least an A mark (or better A+).
 
 ## Authentication (who you are)
 *TODO*
 
 ## Authorization (what are you allowed to do)
+*TODO*
+
+## Data storage
 *TODO*
 
 ## HTTP Security Headers (Browsers defenses)
