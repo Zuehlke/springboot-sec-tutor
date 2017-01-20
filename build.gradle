@@ -1,0 +1,20 @@
+group 'com.zuehlke.bgre'
+version '1.0-SNAPSHOT'
+
+apply plugin: 'java'
+
+repositories {
+    mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    compile("org.springframework.boot:spring-boot-starter-web:1.4.2.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-security:1.4.2.RELEASE")
+    compile("org.springframework.boot:spring-boot-starter-data-jpa:1.4.2.RELEASE")
+    compile("com.h2database:h2:1.4.193")
+
+    testCompile("org.springframework.boot:spring-boot-starter-test:1.4.2.RELEASE")
+}
