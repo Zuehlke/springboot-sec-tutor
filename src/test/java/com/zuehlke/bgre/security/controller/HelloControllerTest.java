@@ -13,7 +13,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest
 public class HelloControllerTest {
 
     private MockMvc mockMvc;
@@ -26,7 +25,7 @@ public class HelloControllerTest {
     }
 
     @Test
-    public void getHello() throws Exception {
+    public void getHello_printsWelcome() throws Exception {
         mockMvc.perform(get("/hello"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Welcome"));
