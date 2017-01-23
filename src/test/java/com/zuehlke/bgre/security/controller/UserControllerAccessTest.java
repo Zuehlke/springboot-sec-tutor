@@ -50,7 +50,8 @@ public class UserControllerAccessTest {
     @Test
     @WithMockUser(username = "user", roles = {"USER"})
     public void getUsers_asRoleUser_accessDenied() throws Exception {
-        mvc.perform(get("/users")).andExpect(status().isForbidden());
+        mvc.perform(get("/users"))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -60,4 +61,13 @@ public class UserControllerAccessTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("[{\"username\":\"user1\",\"roles\":[\"USER\"]}]"));
     }
+
+    @Test
+    @WithMockUser(username = "selfUser", roles = {"USER"})
+    public void getSelf_asRoleUser_returnsMockedUserFromAnnotation() throws Exception {
+        mvc.perform(get("/users/self"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("{\"username\":\"selfUser\",\"roles\":[\"ROLE_USER\"]}"));
+    }
+
 }
