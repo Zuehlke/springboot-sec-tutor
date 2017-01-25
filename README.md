@@ -92,10 +92,11 @@ Therefore if you have a correctly configured CORS configuration (see HTTP Securi
 This is recommended when you use spring boot as a backend service only. An example implementation can be found in the *rest-auth* branch. It requires some caution when implementing it.
 
 #### CSRF prevention
-There is more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). We will cover the easiest one (having a custom header):
-First of all we have to carefully configure CORS (see HTTP Security Headers).
-When we know CORS is configured correctly we need to make sure that all the request are CORS aware. Relying on CORS we know that if a custom header is present (e.g. X-Requested-With) the browser will either not make the response accessible or will preflight the request (for details see [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS] and [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Protecting_REST_Services:_Use_of_Custom_Request_Headers]).
-We need to make sure that this Header is present for every request. *TODO*
+There are more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). We will cover the having a custom header which fits the needs best for a pure backend (no token handling). Be aware that if you use AngularJS you can use spring's `CookieCsrfTokenRepository` which implements the "Double Submit Cookie" strategy and works as default with AngularJS.
+
+First of all we have to carefully configure CORS (see HTTP Security Headers) which we will need to do anyways!
+When we know CORS is configured correctly we need to make sure that all the request are not simple requests. Relying on CORS we know that if a custom header is present (e.g. X-Requested-With) the browser will either not make the response accessible or will preflight the request (for details see [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS] and [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Protecting_REST_Services:_Use_of_Custom_Request_Headers]).
+We need to make sure that this Header is present for every request and therefore need a custom Filter: *TODO*
 
 As suggested by the OWASP article we also have to check the Origin and Referer Header to prevent some exotic attacks with Flash. *TODO*
 
@@ -104,6 +105,8 @@ As suggested by the OWASP article we also have to check the Origin and Referer H
 Now we should be save agains CSRF attacks. But we haven't implemented the authentication service yet. For that we will need custom implementations of *AuthenticationEntryPoint* and *AbstractAuthenticationProcessingFilter* *TODO*
 
 Be careful when implementing your REST services. If you for example change state with a GET request the security may be compromised.
+
+If you don't want to use Cookies as session identifier store you have to either include spring-session (see [http://docs.spring.io/spring-session/docs/current/reference/html5/guides/boot.html]) and use HeaderHttpSessionStrategy or you could implement your own AuthenticationFilter to check the request for the valid Token (you might also think about disabling the creation of sessions with `sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)` if you have a custom AuthenticationFilter and don't need any other server (session) state). But be careful since cookies have securing mechanisms like secure, httpOnly, max-age etc. which you can't enforce when using another browser persistency mechanism.
 
 ---
 
