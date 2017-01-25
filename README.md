@@ -34,6 +34,7 @@ Mostly the SSL is terminated on the Loadbalancer. AWS lets you create signed cer
 #### Pros
 - Easy SSL implementation
 - Scalable
+
 #### Cons
 - Not truly end-to-end if terminated on LB (see [http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/configuring-https-endtoend.html])
 - Configuration. Not fine grained: You can choose from predefined set of SSL Security Policies
@@ -58,6 +59,10 @@ For AWS LB HTTPS configuration refer to:
 Once the configuration is done and you think you did everything right, its time to face the truth. Deploy your app and check your ssl configuration with [https://www.ssllabs.com/ssltest/]. Fix configuration until you have at least an A mark (or better A+).
 
 ## Authentication (who you are)
+Most applications need authorization (what is who allowed to do). Authentication is precondition for authorization since you need to make sure who the application is interacting with. 
+There are different ways to implement authentication in spring boot, each having their pros and cons.
+
+### Fromlogin (Cookie Session-ID)
 The most common and easiest to use solution. Implementation can be found in the master branch. The relevant part is the code in the *WebSecurityConfigurerAdapter*
 
 ```java
@@ -81,7 +86,7 @@ Therefore if you have a correctly configured CORS configuration (see HTTP Securi
 - Easy to configure
 
 #### Cons
-- Requires spring to render CSRF-Token or handle it manually
+- Requires spring to render CSRF-Token or handle defense manually
 
 ---
 
