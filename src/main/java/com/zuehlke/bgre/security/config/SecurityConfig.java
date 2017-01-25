@@ -34,6 +34,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .and()
                 .formLogin()
                 .and()
+                .logout().permitAll()
+                .and()
                 // Security Headers http://docs.spring.io/spring-security/site/docs/current/reference/html/headers.html
                 .headers()
                     // Cache-Control: no-cache set by default spring boot security
