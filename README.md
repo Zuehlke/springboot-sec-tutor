@@ -1,7 +1,7 @@
 # springboot-sec-tutor
 ---
 ## Introduction
-This guide covers the security concerns about RESTful-backed applications. Spring boot is used to show example backend implementations of these concerns. Client implementations are not covered, yet in most cases this will be the browser and therefore this guide covers browser defenses.
+This guide covers the security concerns about RESTful-backed applications. Spring boot is used to show example backend implementations of these concerns. Client implementations are not covered, only described. Furthermore guide covers browser defenses that should be implemented.
 
 ## Transport Layer
 First to think about is whether to use SSL and for what services to use it (e.g. static resources). SSL should always be used when your application involves authentication. Hence at least your authentication process and the restricted part of the application should be restricted to SSL (HTTPS) connections only. The reason is pretty obvious: Prevention of account- and session-hijacking through man-in-the-middle attacks.
@@ -87,6 +87,23 @@ Therefore if you have a correctly configured CORS configuration (see HTTP Securi
 
 #### Cons
 - Requires spring to render CSRF-Token or handle defense manually
+
+### REST Authentication Login (Cookie Session-ID)
+This is recommended when you use spring boot as a backend service only. An example implementation can be found in the *rest-auth* branch. It requires some caution when implementing it.
+
+#### CSRF prevention
+There is more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). We will cover the easiest one (having a custom header):
+First of all we have to carefully configure CORS (see HTTP Security Headers).
+When we know CORS is configured correctly we need to make sure that all the request are CORS aware. Relying on CORS we know that if a custom header is present (e.g. X-Requested-With) the browser will either not make the response accessible or will preflight the request (for details see [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS] and [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Protecting_REST_Services:_Use_of_Custom_Request_Headers]).
+We need to make sure that this Header is present for every request. *TODO*
+
+As suggested by the OWASP article we also have to check the Origin and Referer Header to prevent some exotic attacks with Flash. *TODO*
+
+#### Custom authentication (REST) service
+
+Now we should be save agains CSRF attacks. But we haven't implemented the authentication service yet. For that we will need custom implementations of *AuthenticationEntryPoint* and *AbstractAuthenticationProcessingFilter* *TODO*
+
+Be careful when implementing your REST services. If you for example change state with a GET request the security may be compromised.
 
 ---
 
