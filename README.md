@@ -58,13 +58,42 @@ For AWS LB HTTPS configuration refer to:
 Once the configuration is done and you think you did everything right, its time to face the truth. Deploy your app and check your ssl configuration with [https://www.ssllabs.com/ssltest/]. Fix configuration until you have at least an A mark (or better A+).
 
 ## Authentication (who you are)
-*TODO*
+The most common and easiest to use solution. Implementation can be found in the master branch. The relevant part is the code in the *WebSecurityConfigurerAdapter*
+
+```java
+@Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http
+                .authorizeRequests()
+                .anyRequest().authenticated()
+                .and()
+                .formLogin()
+                .and()
+                .logout().permitAll();
+    }
+```
+
+The `formLogin()` does it all. This means that the form will be rendered by spring boot (default login template). If you want to have another template you can specify it with `loginPage("/login")` and have a View "login" configured (see [http://docs.spring.io/spring-security/site/docs/current/guides/html5/form-javaconfig.html#configuring-a-custom-login-page] for details).
+If you plan to use the spring boot app only as backend then its recommend to use **REST Authentication Login**. Why? Well because else it results in having to deal with the CSRF-TOKEN by yourself.
+Therefore if you have a correctly configured CORS configuration (see HTTP Security Headers) you could have an extra `@RestController` which provides the Token in a Header. You can access the CSRF-Token with `request.getAttribute(CsrfToken.class.getName())` (requires `CsrfFilter` to be enabled, which is default in spring boot). **DO NOT DISABLE CSRF IF YOU HAVE A FORM LOGIN**
+
+#### Pros
+- Easy to configure
+
+#### Cons
+- Requires spring to render CSRF-Token or handle it manually
+
+---
 
 ## Authorization (what are you allowed to do)
 *TODO*
 
+---
+
 ## Data storage
 *TODO*
+
+---
 
 ## HTTP Security Headers (Browsers defenses)
 *TODO*
