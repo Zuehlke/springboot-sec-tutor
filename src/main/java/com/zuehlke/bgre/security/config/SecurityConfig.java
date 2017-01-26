@@ -1,13 +1,23 @@
 package com.zuehlke.bgre.security.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.csrf.CsrfFilter;
+
+import javax.servlet.http.HttpServletResponse;
 
 @Configuration
 @EnableWebSecurity
@@ -18,6 +28,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private RESTAuthenticationSuccessHandler restAuthenticationSuccessHandler;
+
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Bean
+    public RESTAuthenticationFilter restAuthenticationFilter() {
+        RESTAuthenticationFilter restAuthenticationFilter = new RESTAuthenticationFilter(objectMapper);
+        restAuthenticationFilter.setAuthenticationManager(authenticationManager);
+        restAuthenticationFilter.setAuthenticationSuccessHandler(restAuthenticationSuccessHandler);
+        return restAuthenticationFilter;
+    }
 
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
@@ -31,11 +58,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http
                 .authorizeRequests()
                 .anyRequest().authenticated()
+                .and().exceptionHandling().authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .and().anonymous().disable()
+                .csrf().disable()
+                .addFilterBefore(new XRequestedWithHeaderFilter(), CsrfFilter.class)
+                .addFilterBefore(new EnforceCorsFilter(), CsrfFilter.class)
+                .addFilterBefore(restAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .logout().logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_OK))
                 .and()
-                .formLogin()
-                .and()
-                .logout().permitAll()
-                .and()
+                //.logout().permitAll()
+                //.and()
                 // Security Headers http://docs.spring.io/spring-security/site/docs/current/reference/html/headers.html
                 .headers()
                     // Cache-Control: no-cache set by default spring boot security
