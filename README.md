@@ -89,16 +89,16 @@ Therefore if you have a correctly configured CORS configuration (see HTTP Securi
 - Requires spring to render CSRF-Token or handle defense manually
 
 ### REST Authentication Login (Cookie Session-ID)
-This is recommended when you use spring boot as a backend service only. An example implementation can be found in the *rest-auth* branch. It requires some caution when implementing it.
+This is recommended when you use spring boot as a backend service only. An example implementation can be found in the [rest-auth](https://github.com/Zuehlke/springboot-sec-tutor/tree/rest-auth) branch. It requires some caution when implementing it.
 
 #### CSRF prevention
-There are more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). Spring uses the "Synchronizer Token" per default. This is also used in the Formlogin above. But since we can't render the Token with spring into a form we must find another way to prevent CSRF attacks. The easiest way for that is to use spring's `CookieCsrfTokenRepository` with `csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())` which implements the "Double Submit Cookie" strategy and works as default with AngularJS and therefore is a really nice solution.
+There are more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). Spring uses the "Synchronizer Token" per default. This is also used in the Formlogin above. But since we can't render the Token with spring into a form we must find another way to prevent CSRF attacks. The easiest way for that is to use spring's `CookieCsrfTokenRepository` with `csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())` which implements the "Double Submit Cookie" strategy and works as default with AngularJS and therefore is a really nice solution. Be aware that you must relax the SOP (Same-origin Policy) with a CORS configuration (see HTTP Security Headers) if you have different Origins for the frontend and backend (else frontend will not be able to read the CsrfToken cookie).
 
 
-We will additionally cover "having a custom header" which need some implementation but fits pretty good for a pure backend (no token handling).
+In the branch [rest-auth](https://github.com/Zuehlke/springboot-sec-tutor/tree/rest-auth) there is an implementation of "having a custom header" which need some Filters to be implemented but fits pretty good for a pure backend (no token handling).
 For this we have to carefully configure CORS (see HTTP Security Headers) first. It needs to be done anyway to make your REST backend work with your frontend!
 When we know CORS is configured correctly we need to make sure that all the request are not simple requests. Relying on CORS we know that if a custom header is present (e.g. X-Requested-With) the browser will either not make the response accessible or will preflight the request (for details see [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS] and [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Protecting_REST_Services:_Use_of_Custom_Request_Headers]).
-We need to make sure that this Header is present for every request and therefore need a custom Filter `XRequestedWithHeaderFilter`:
+To ensure browser's requests are CORS-aware this Header is required to be present for every request and therefore need a custom Filter `XRequestedWithHeaderFilter`:
 
 ```java
 @Override
@@ -113,7 +113,7 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
 
 ```
 On the client side the header has to be added to every AJAX request. In AngularJS you can use [$httpProvider#defaults](https://code.angularjs.org/1.4.10/docs/api/ng/provider/$httpProvider#defaults) for that.
-The OWASP article suggests to check Origin and Referer Header to prevent some exotic attacks with Flash. The Origin header is already checked (if present) by spring CORS handling and in case if it doesn't match the request is rejected (controller code not executed). Since in our case all request (AJAX) should have an Origin header (to enforce CORS) we are going to write a Filter that denies all requests without the Origin header `EnforceCorsFilter`:
+The OWASP article suggests to check Origin and Referer Header to prevent some exotic attacks with Flash. The Origin header is already checked (if present) by spring CORS handling and in case if it doesn't match the request is rejected (controller code not executed). Since in our case all request (done by instances of XMLHttpRequest) should have an Origin header we are going to implement a Filter, that denies all requests without the Origin header, called `EnforceCorsFilter`:
 
 ```java
 @Override
@@ -235,6 +235,9 @@ That's it for the custom Authentication.
 Be careful when implementing your REST services. If you for example change state with a GET, HEAD or OPTIONS request the security may be compromised (this also applies to non-persistent state like session-state).
 
 If you don't want to use Cookies as session identifier store you have to either include spring-session (see [http://docs.spring.io/spring-session/docs/current/reference/html5/guides/boot.html]) and e.g. use HeaderHttpSessionStrategy or you could implement another AuthenticationFilter to check the request for the valid Token (you might also think about disabling the creation of sessions with `sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)` if you have a custom AuthenticationFilter and don't need any other server (session) state). But be careful since cookies have securing mechanisms like secure, httpOnly, max-age etc. which you can't enforce when using another browser persistency mechanism.
+
+### JWT-based Authentication
+*TODO*
 
 ---
 
