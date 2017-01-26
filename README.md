@@ -37,7 +37,7 @@ Mostly the SSL is terminated on the Loadbalancer. AWS lets you create signed cer
 
 #### Cons
 - Not truly end-to-end if terminated on LB (see [http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/configuring-https-endtoend.html])
-- Configuration. Not fine grained: You can choose from predefined set of SSL Security Policies
+- Configuration. You can choose from predefined set of SSL Security Policies or configure it via command line or JSON (see [https://mozilla.github.io/server-side-tls/ssl-config-generator/] and choose AWS LB)
 
 ### SSL configuration
 Now that the implementing part is known, the question is what to consider a secure SSL config. Therefore you want to check the following sites:
@@ -67,15 +67,15 @@ The most common and easiest to use solution. Implementation can be found in the 
 
 ```java
 @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http
-                .authorizeRequests()
-                .anyRequest().authenticated()
-                .and()
-                .formLogin()
-                .and()
-                .logout().permitAll();
-    }
+protected void configure(HttpSecurity http) throws Exception {
+    http
+            .authorizeRequests()
+            .anyRequest().authenticated()
+            .and()
+            .formLogin()
+            .and()
+            .logout().permitAll();
+}
 ```
 
 The `formLogin()` does it all. This means that the form will be rendered by spring boot (default login template). If you want to have another template you can specify it with `loginPage("/login")` and have a View "login" configured (see [http://docs.spring.io/spring-security/site/docs/current/guides/html5/form-javaconfig.html#configuring-a-custom-login-page] for details).
@@ -92,19 +92,43 @@ Therefore if you have a correctly configured CORS configuration (see HTTP Securi
 This is recommended when you use spring boot as a backend service only. An example implementation can be found in the *rest-auth* branch. It requires some caution when implementing it.
 
 #### CSRF prevention
-There are more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). We will cover the having a custom header which fits the needs best for a pure backend (no token handling). Be aware that if you use AngularJS you can use spring's `CookieCsrfTokenRepository` which implements the "Double Submit Cookie" strategy and works as default with AngularJS.
+There are more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). We will cover the having a custom header which fits the needs best for a pure backend (no token handling). Be aware that if you use AngularJS you can use spring's `CookieCsrfTokenRepository` with `csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())` which implements the "Double Submit Cookie" strategy and works as default with AngularJS. 
 
-First of all we have to carefully configure CORS (see HTTP Security Headers) which we will need to do anyways!
+First of all we have to carefully configure CORS (see HTTP Security Headers) which we will need to do anyway!
 When we know CORS is configured correctly we need to make sure that all the request are not simple requests. Relying on CORS we know that if a custom header is present (e.g. X-Requested-With) the browser will either not make the response accessible or will preflight the request (for details see [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS] and [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Protecting_REST_Services:_Use_of_Custom_Request_Headers]).
-We need to make sure that this Header is present for every request and therefore need a custom Filter: *TODO*
+We need to make sure that this Header is present for every request and therefore need a custom Filter `XRequestedWithHeaderFilter`:
 
-As suggested by the OWASP article we also have to check the Origin and Referer Header to prevent some exotic attacks with Flash. *TODO*
+```java
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    String header = request.getHeader("X-Requested-With");
+    if(header == null || header.isEmpty()){
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST,"X-Requested-With Header is not present or empty");
+    } else {
+        filterChain.doFilter(request, response);
+    }
+}
+
+```
+
+The OWASP article suggests to check Origin and Referer Header to prevent some exotic attacks with Flash. The Origin header is already checked (if present) by spring CORS handling. Since in our case all request (AJAX) should have an Origin header (to enforce CORS) we are going to write a Filter that denies all requests without the Origin header `EnforceCorsFilter`:
+
+```java
+@Override
+protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    if (!CorsUtils.isCorsRequest(request)) {
+        response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Not a CORS request (Origin header is missing)");
+    } else {
+        filterChain.doFilter(request, response);
+    }
+}
+```
 
 #### Custom authentication (REST) service
 
-Now we should be save agains CSRF attacks. But we haven't implemented the authentication service yet. For that we will need custom implementations of *AuthenticationEntryPoint* and *AbstractAuthenticationProcessingFilter* *TODO*
+Now we should be save against CSRF attacks. But we haven't implemented the authentication service yet. For that we will need custom implementations of *AuthenticationEntryPoint* and *AbstractAuthenticationProcessingFilter* *TODO*
 
-Be careful when implementing your REST services. If you for example change state with a GET request the security may be compromised.
+Be careful when implementing your REST services. If you for example change state with a GET, HEAD or OPTIONS request the security may be compromised (this also applies to non-persistent state like session-state).
 
 If you don't want to use Cookies as session identifier store you have to either include spring-session (see [http://docs.spring.io/spring-session/docs/current/reference/html5/guides/boot.html]) and use HeaderHttpSessionStrategy or you could implement your own AuthenticationFilter to check the request for the valid Token (you might also think about disabling the creation of sessions with `sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)` if you have a custom AuthenticationFilter and don't need any other server (session) state). But be careful since cookies have securing mechanisms like secure, httpOnly, max-age etc. which you can't enforce when using another browser persistency mechanism.
 
