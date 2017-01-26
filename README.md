@@ -226,6 +226,12 @@ protected void configure(HttpSecurity http) throws Exception {
 ```
 That's it for the custom Authentication.
 
+#### Pros
+- Fits backend only solution best (no form render or submit).
+
+#### Cons
+- No default implementation by spring
+
 Be careful when implementing your REST services. If you for example change state with a GET, HEAD or OPTIONS request the security may be compromised (this also applies to non-persistent state like session-state).
 
 If you don't want to use Cookies as session identifier store you have to either include spring-session (see [http://docs.spring.io/spring-session/docs/current/reference/html5/guides/boot.html]) and e.g. use HeaderHttpSessionStrategy or you could implement another AuthenticationFilter to check the request for the valid Token (you might also think about disabling the creation of sessions with `sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)` if you have a custom AuthenticationFilter and don't need any other server (session) state). But be careful since cookies have securing mechanisms like secure, httpOnly, max-age etc. which you can't enforce when using another browser persistency mechanism.
