@@ -90,7 +90,7 @@ If you plan to use the spring boot app only as backend then I recommend to use *
 
 ### REST Authentication Login (Cookie Session-ID)
 This is recommended when you use spring boot as a backend service only. An example implementation can be found in the [rest-auth](https://github.com/Zuehlke/springboot-sec-tutor/tree/rest-auth) branch. It requires some caution when implementing it.
-Meaning CSRF prevention may have to be dealt by yourself.
+Meaning CSRF prevention may have to be dealt with by yourself.
 
 #### CSRF prevention
 There are more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). Spring uses the "Synchronizer Token" per default. This is also used in the Formlogin above. But since we can't render the Token with spring into a form we must find another way to prevent CSRF attacks.
@@ -242,8 +242,15 @@ Be careful when implementing your REST services. If you for example change state
 
 If you don't want to use Cookies as session identifier store you have to either include spring-session (see [http://docs.spring.io/spring-session/docs/current/reference/html5/guides/boot.html]) and e.g. use HeaderHttpSessionStrategy or you could implement another AuthenticationFilter to check the request for the valid Token (you might also think about disabling the creation of sessions with `sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)` if you have a custom AuthenticationFilter and don't need any other server (session) state). But be careful since cookies have securing mechanisms like secure, httpOnly, max-age etc. which you can't enforce when using another browser persistency mechanism.
 
-### JWT-based Authentication
-*TODO*
+### JWT
+We first have to look into JWT a bit. JWT is a signed Token and therefore can be checked by the signing party if it has originally signed it. 
+So when we use JWT for Authentication the server issues signed tokens and sends it to the client (browser) which has to store it. The server normally can forget about the issued tokens. Everytime when the client now sends this JWT token with a request, the server can check if it has issued this token. But this means the complete session state is transfered with every request.
+Also if the server forgets about the issued tokens then they can't be revoked. You can find a lot of example implementations on the internet. **But** there is no good reason to use JWT's as session mechanism ([check out this article reasoning why](http://cryto.net/~joepie91/blog/2016/06/13/stop-using-jwt-for-sessions/)).
+We agree with this reasoning and therefore will not cover an example implementation but only describe an example of a reasonable use case: *Single-use authorization token*: The actual authentication has nothing to do with JWTs.
+The use case could look like this:
+As a registered and authenticated user I want to issue an invitation so that another user can register. The given roles at the registration have to be fixed by the registered user.
+
+Having a JWT here is convenient: It contains the claims (right to register, roles) and an expiration date. The server can completely forget about this token (no state required). The token should be short-lived. To make sure it is only used once the email or another user-unique value could be saved in the token.
 
 ---
 
