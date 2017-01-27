@@ -80,7 +80,7 @@ protected void configure(HttpSecurity http) throws Exception {
 
 The `formLogin()` does it all. This means that the form will be rendered by spring boot (default login template). If you want to have another template you can specify it with `loginPage("/login")` and have a View "login" configured (see [http://docs.spring.io/spring-security/site/docs/current/guides/html5/form-javaconfig.html#configuring-a-custom-login-page] for details).
 If you plan to use the spring boot app only as backend then I recommend to use **REST Authentication Login**. Why? Well because else it results in having to deal with the CSRF-TOKEN by yourself.
-Therefore if you have a correctly configured CORS configuration (see HTTP Security Headers) you could have an extra `@RestController` which provides the Token in a Header. You can access the CSRF-Token with `request.getAttribute(CsrfToken.class.getName())` (requires `CsrfFilter` to be enabled, which is default in spring boot). **DO NOT DISABLE CSRF IF YOU HAVE A FORM LOGIN**
+**DO NOT DISABLE CSRF IF YOU HAVE A FORM LOGIN LIKE THIS**
 
 #### Pros
 - Easy to configure (everything implemented by spring)
@@ -90,13 +90,16 @@ Therefore if you have a correctly configured CORS configuration (see HTTP Securi
 
 ### REST Authentication Login (Cookie Session-ID)
 This is recommended when you use spring boot as a backend service only. An example implementation can be found in the [rest-auth](https://github.com/Zuehlke/springboot-sec-tutor/tree/rest-auth) branch. It requires some caution when implementing it.
+Meaning CSRF prevention may have to be dealt by yourself.
 
 #### CSRF prevention
-There are more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). Spring uses the "Synchronizer Token" per default. This is also used in the Formlogin above. But since we can't render the Token with spring into a form we must find another way to prevent CSRF attacks. The easiest way for that is to use spring's `CookieCsrfTokenRepository` with `csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())` which implements the "Double Submit Cookie" strategy and works as default with AngularJS and therefore is a really nice solution. Be aware that you must relax the SOP (Same-origin Policy) with a CORS configuration (see HTTP Security Headers) if you have different Origins for the frontend and backend (else frontend will not be able to read the CsrfToken cookie).
+There are more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). Spring uses the "Synchronizer Token" per default. This is also used in the Formlogin above. But since we can't render the Token with spring into a form we must find another way to prevent CSRF attacks.
 
+The easiest way for that is to use spring's `CookieCsrfTokenRepository` with `csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())` which implements the "Double Submit Cookie" strategy and works as default with AngularJS and therefore is a really nice solution. Be aware that your frontend and backend must have the same Origin, if you have different Origins for the frontend and backend the frontend will not be able to read the backend Cookies through `document.cookie` even if you configured CORS. The Cookies will follow SOP (Same-origin Policy) (see [https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials]).
+If the Origins differ you have to correctly configure CORS (see HTTP Security Headers) and implement a custom `CsrfTokenRepository` or your own `@RestController` (with e.g. /hello) which provides the Session-Token in a Header (but only in CORS-aware requests! Else you are not safe at all). 
 
-In the branch [rest-auth](https://github.com/Zuehlke/springboot-sec-tutor/tree/rest-auth) there is an implementation of "having a custom header" which need some Filters to be implemented but fits pretty good for a pure backend (no token handling).
-For this we have to carefully configure CORS (see HTTP Security Headers) first. It needs to be done anyway to make your REST backend work with your frontend!
+In the branch [rest-auth](https://github.com/Zuehlke/springboot-sec-tutor/tree/rest-auth) there is an implementation of "having a custom header" which need some Filters to be implemented but fits pretty good for a pure backend (no token handling and Origin of frontend doesn't have to be the same).
+For this we have to carefully configure CORS (see HTTP Security Headers) first. It needs to be done anyway to make your REST backend work with your frontend if the Origins differ!
 When we know CORS is configured correctly we need to make sure that all the request are not simple requests. Relying on CORS we know that if a custom header is present (e.g. X-Requested-With) the browser will either not make the response accessible or will preflight the request (for details see [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS] and [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Protecting_REST_Services:_Use_of_Custom_Request_Headers]).
 To ensure browser's requests are CORS-aware this Header is required to be present for every request and therefore need a custom Filter `XRequestedWithHeaderFilter`:
 
@@ -224,13 +227,16 @@ protected void configure(HttpSecurity http) throws Exception {
             .logout().logoutSuccessHandler((request, response, authentication) -> response.setStatus(HttpServletResponse.SC_OK));
 }
 ```
-That's it for the custom Authentication.
 
 #### Pros
-- Fits backend only solution best (no form render or submit).
+- No form rendering
+- No Token handling
+- Frontends can have different Origins
 
 #### Cons
 - No default implementation by spring
+
+That's it for the custom Authentication.
 
 Be careful when implementing your REST services. If you for example change state with a GET, HEAD or OPTIONS request the security may be compromised (this also applies to non-persistent state like session-state).
 
