@@ -398,6 +398,8 @@ Spring security recognizes if the servlet container serves HTTPS and therefore m
 
 You should alway make sure that the session cookie has flags 'httpOnly' and 'secure'!
 
+---
+
 ## CORS (Cross-Origin Resource Sharing)
 CORS was introduced to relax the SoP which prevents requests made by a script (e.g. AJAX request) that has been loaded by `www.a.com` to a backend `www.b.com`. So if the Origins of your frontend(s) and backend differ you have to configure CORS anyway because else browsers will block these calls. First you exactly want to know what CORS is and what headers it includes: [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS]
 
