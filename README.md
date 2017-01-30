@@ -261,7 +261,7 @@ We can control which role can invoke which methods or call which URLs.
 The implementation of a domain model containing `Role` can be found in this repository. In our case users can have multiple roles and therefore is modeled as a many-to-many relationship and our role model is not hierarchical. Therefore one role (e.g. ADMIN) doesn't contain another role (e.g. USER).
 
 There are two ways to restrict the access for a specific role (or multiple roles):
-- Spring security configuration `WebSecurityConfigurerAdapter`
+- Spring security configuration `WebSecurityConfigurerAdapter` 
 	```java
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
@@ -272,6 +272,7 @@ There are two ways to restrict the access for a specific role (or multiple roles
 			// ....
 	}
 	``` 
+
 	This will restrict the access for URL /users/** to users with the "ROLE_USER" authority. Be aware that this is invoked (and therefore blocked) before any of the Controllers code and even maybe some of your Filters. So you can't generally restrict access here and relax it somewhere else.
 - Method based access control (Annotations)
 	You have to enable global method security with the annotation `@EnableGlobalMethodSecurity(prePostEnabled = true)` in one of your `@Configuration`s (preferably in `WebSecurityConfigurerAdapter`). After that you can use `@PreAuthorize` or `@PostAuthorize` on class- and method-level with Spring EL to control access. This controller is restricted to users with "ROLE_USER" but it contains a method that is restricted for users with "ROLE_ADMIN" only.
