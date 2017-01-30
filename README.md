@@ -384,7 +384,7 @@ Controls the XSS protection mechanism of the browser. Be aware that the browser'
 Do not relax this unless you really have to do it. Then you can use `headers().xssProtection().block(false).xssProtectionEnabled(true)` to relax it.
 
 ### Content-Security-Policy
-CSP allows you to control what content should be loaded/executed by the browsers. See [https://content-security-policy.com/] for the directives and sources that can be configured. The CSP may depend on the content that was loaded by a request but spring security currently only assits you with the global configuration. So if you want to use Annotations to control the CSP header you have to implement that by yourself.
+CSP allows you to control what content should be loaded/executed by the browsers. See [https://content-security-policy.com/] for the directives and sources that can be configured. The CSP may depend on the content that was loaded by a request but spring security currently only assits you with the global configuration. So if you want to use Annotations in your `@Controller`s to control the CSP header you have to implement that by yourself.
 For the global configuration use:
 
 `headers().contentSecurityPolicy("default-src 'self'; script-src 'self' 'unsafe-inline'; report-uri /csp")`
