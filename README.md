@@ -338,4 +338,56 @@ This repository does **NOT** contain any implementation to save encrypted data.
 ---
 
 ## HTTP Security Headers (Browsers defenses)
-*TODO*
+There are some HTTP Headers (set by your application) to control some security mechanisms of your user's browsers. Spring boot sends most of them per default and therefore provides a good basic security. We will quickly go through these headers and show how to enable/configure them in the `WebSecurityConfigurerAdapter`.
+Refer to [http://docs.spring.io/spring-security/site/docs/current/reference/html/headers.html] to discover all possibilities.
+
+### Cache-Control
+Cache-Control header will advice the browser if the page should be cached. Usually you want to turn off the cache to prevent unauthorized attackers to access this cache through the browser history. Spring security disables the cache as default.
+
+### X-Content-Type-Options
+This header controls the browsers capability of guessing a resource's Content-Type. This feature should be disabled to prevent some attacks (e.g. XSS in image meta-data). Spring security disables content sniffing as default.
+
+### Strict-Transport-Security
+HSTS prevents the browsers to connect to this domain without SSL. Suggestion: Implement this header where you terminate your SSL connection (e.g. if you use HTTP Server like nginx your should adivce nginx to add this header instead of using spring to add it. Reason: single responsibility principle). If spring recognizes that the embedded servlet container only serves HTTPS this header is added automatically with some default values:
+`Strict-Transport-Security: max-age=31536000 ; includeSubDomains`
+
+To enable and ajust the HSTS you can use `headers().httpStrictTransportSecurity().maxAgeInSeconds(63072000).includeSubDomains(true)`. Unfortunately the requirements for the preload list is to have `preload` directive in the header (see [https://hstspreload.org/]) which cannot be added this way.
+
+**Be very careful when deploying this header: Browser will save this and you can't undo it.**
+### Public-Key-Pins
+If for some reason your trust in CAs doesn't meet the requirements or you absolutely want to make sure that only a specific certificate is accepted by your client's browsers, then use HPKP. There are not too many good reasons to use HPKP (see [https://blog.qualys.com/ssllabs/2016/09/06/is-http-public-key-pinning-dead])! But if you know what you are doing and want to enable HPKP (which you should again only do in spring if you terminate the SSL connection in the embedded servlet container like HSTS), then you can do it like this:
+```java
+headers().
+	.httpPublicKeyPinning()
+	.addSha256Pins("pGO1ErsUFSrId1hozlZOfyYOsE8mdiDgLyR89CtHK8E=")
+	.maxAgeInSeconds(63072000)
+	.reportOnly(true)
+	.reportUri("/pkp")
+	.includeSubDomains(true);
+```
+The `addSha256Pins` method takes a list of pins. The pins are actually base64-encoded-SHA256-hashed-DER-formatted Public-Keys so you can use
+
+`openssl x509 -pubkey < tls.crt | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64`
+
+to create a pin (see [https://scotthelme.co.uk/hpkp-http-public-key-pinning/] for details). You can pin any public key in the chain (e.g. CA's public key or intermediate certificate authority's public key).
+
+There is an example implementation in this repository (pinning embedded servlet containers certificate's public key).
+
+### X-Frame-Options
+Restricts browsers from framing your site. Spring security disables the framing as default with `DENY`. You can relax this with e.g. `headers().frameOptions().sameOrigin()` as also done in the implementation of this repository.
+
+### X-XSS-Protection
+Controls the XSS protection mechanism of the browser. Be aware that the browser's XSS protection can only detect (and block) a few XSS attacks (many NOT!). Spring security enables this header as default:
+
+`XSS-Protection: 1; mode=block`
+
+Do not relax this unless you really have to do it. Then you can use `headers().xssProtection().block(false).xssProtectionEnabled(true)` to relax it.
+
+### Content-Security-Policy
+CSP allows you to control what content should be loaded/executed by the browsers. See [https://content-security-policy.com/] for the directives and sources that can be configured. The CSP may depend on the content that was loaded by a request but spring security currently only assits you with the global configuration. So if you want to use Annotations to control the CSP header you have to implement that by yourself.
+For the global configuration use:
+
+`headers().contentSecurityPolicy("default-src 'self'; script-src 'self' 'unsafe-inline'; report-uri /csp")`
+
+
+That's it for this tutor!
