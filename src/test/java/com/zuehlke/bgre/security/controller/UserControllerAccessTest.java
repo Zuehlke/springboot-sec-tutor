@@ -70,4 +70,11 @@ public class UserControllerAccessTest {
                 .andExpect(content().string("{\"username\":\"selfUser\",\"roles\":[\"ROLE_USER\"]}"));
     }
 
+    @Test
+    @WithMockUser(username = "selfUser", roles = {"UNVERIFIED"})
+    public void getSelf_asRoleUnverified_accessDenied() throws Exception {
+        mvc.perform(get("/users/self"))
+                .andExpect(status().isForbidden());
+    }
+
 }
