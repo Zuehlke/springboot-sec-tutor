@@ -291,6 +291,8 @@ There are two ways to restrict the access for a specific role (or multiple roles
 	}
 	```
 
+### OAuth2
+When you implement an resource server and the authentication (and optionally authorization) is done by a different application then mostly OAuth2 is considered as solution. There are plenty of example implementations on the internet to find (e.g. [https://spring.io/guides/tutorials/spring-boot-oauth2/]) and that's why we will not cover an implementation.
 
 ---
 
