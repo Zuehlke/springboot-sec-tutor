@@ -281,12 +281,12 @@ There are two ways to restrict the access for a specific role (or multiple roles
 	@RequestMapping("/users")
 	@PreAuthorize("hasRole('USER')")
 	public class UserController {
-    		@Autowired
-    		private UserService userService;
+		@Autowired
+		private UserService userService;
 
-    		@PreAuthorize("hasRole('ADMIN')")
-    		public List<UserDTO> getUsers() {
-		// ...
+		@PreAuthorize("hasRole('ADMIN')")
+		public List<UserDTO> getUsers() {
+			// ...
 		}
 	}
 	```
@@ -294,8 +294,46 @@ There are two ways to restrict the access for a specific role (or multiple roles
 
 ---
 
-## Data storage
-*TODO*
+## Data security
+
+### Passwords
+There is at least some part of data that should be secured by your application: Passwords. For this you should use a cryptographic hash function. Check [OWASP Password Storage Cheat Sheet](https://www.owasp.org/index.php/Password_Storage_Cheat_Sheet) and decide on which one-way function to use.
+In this repository we use bcrypt. You can implement your own `PasswordEncoder` (e.g. using Argon2 Library (currently only bindings for JVM exists)). Spring includes a few implementations of `PasswordEncoder` like `BCryptPasswordEncoder`, `SCryptPasswordEncoder` or `Pbkdf2PasswordEncoder`.
+We create a new `@Configuration` which defines the `PasswordEncoder` as a Bean (Note: you can replace `BCryptPasswordEncoder` with any implementation of `PasswordEncoder`).
+
+```java
+@Configuration
+public class PasswordEncoderConfig {
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+}
+```
+You could also include this code into your `WebSecurityConfigurerAdapter`.
+Next we will use this `Bean` in the `WebSecurityConfigurerAdapter` to tell our `UserDetailsService` to use the encoder.
+
+```java
+public class SecurityConfig extends WebSecurityConfigurerAdapter {
+    @Autowired
+    private UserDetailsServiceImpl userDetailsService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth
+                .userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder);
+    }
+}
+```
+
+### Encryption
+If you need to save data encrypted (and e.g. prompt user for password to decrypt) then you can implement your own `BytesEncryptor` or use one of springs included (e.g. `AesBytesEncryptor`). Springs helper class `Encryptors` can be used for convenience (e.g. `Encryptors.delux(dataToSecure, salt)`).
+*Note:* You might need to download and install [JCE](http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html) (link for Java 1.8).
+This repository does **NOT** contain any implementation to save encrypted data.
 
 ---
 
