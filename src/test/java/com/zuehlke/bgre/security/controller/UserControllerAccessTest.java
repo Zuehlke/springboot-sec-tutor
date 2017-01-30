@@ -59,7 +59,7 @@ public class UserControllerAccessTest {
     public void getUsers_asRoleAdmin_returnsUsers() throws Exception {
         mvc.perform(get("/users"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("[{\"username\":\"user1\",\"roles\":[\"USER\"]}]"));
+                .andExpect(content().json("[{\"username\":\"user1\",\"roles\":[\"USER\"]}]"));
     }
 
     @Test
@@ -67,7 +67,7 @@ public class UserControllerAccessTest {
     public void getSelf_asRoleUser_returnsMockedUserFromAnnotation() throws Exception {
         mvc.perform(get("/users/self"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("{\"username\":\"selfUser\",\"roles\":[\"ROLE_USER\"]}"));
+                .andExpect(content().json("{\"username\":\"selfUser\",\"roles\":[\"ROLE_USER\"]}"));
     }
 
     @Test
