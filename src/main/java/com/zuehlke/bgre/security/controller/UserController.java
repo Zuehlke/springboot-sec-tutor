@@ -15,6 +15,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/users")
+@PreAuthorize("hasRole('USER')")
 public class UserController {
     @Autowired
     private UserService userService;
