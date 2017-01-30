@@ -389,5 +389,11 @@ For the global configuration use:
 
 `headers().contentSecurityPolicy("default-src 'self'; script-src 'self' 'unsafe-inline'; report-uri /csp")`
 
+## Cookie Security
+Spring security recognizes if the servlet container serves HTTPS and therefore marks the session cookie (JSESSIONID) as secure automatically. But if you terminate your SSL on e.g. apache then spring can't know if the request was served over an SSL tunnel. To set the 'secure' flag on the cookie add the following to your `application.properties`:
+
+`server.session.cookie.secure=true`
+
+You should alway make sure that the session cookie has flags 'httpOnly' and 'secure'!
 
 That's it for this tutor!
