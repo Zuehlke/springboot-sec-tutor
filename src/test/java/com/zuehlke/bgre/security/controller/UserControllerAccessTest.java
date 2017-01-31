@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -50,14 +51,14 @@ public class UserControllerAccessTest {
     @Test
     @WithMockUser(username = "user", roles = {"USER"})
     public void getUsers_asRoleUser_accessDenied() throws Exception {
-        mvc.perform(get("/users"))
+        mvc.perform(get("/users").headers(buildCORSHeaders()))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     @WithMockUser(username = "admin", roles = {"USER", "ADMIN"})
     public void getUsers_asRoleAdmin_returnsUsers() throws Exception {
-        mvc.perform(get("/users"))
+        mvc.perform(get("/users").headers(buildCORSHeaders()))
                 .andExpect(status().isOk())
                 .andExpect(content().json("[{\"username\":\"user1\",\"roles\":[\"USER\"]}]"));
     }
@@ -65,7 +66,7 @@ public class UserControllerAccessTest {
     @Test
     @WithMockUser(username = "selfUser", roles = {"USER"})
     public void getSelf_asRoleUser_returnsMockedUserFromAnnotation() throws Exception {
-        mvc.perform(get("/users/self"))
+        mvc.perform(get("/users/self").headers(buildCORSHeaders()))
                 .andExpect(status().isOk())
                 .andExpect(content().json("{\"username\":\"selfUser\",\"roles\":[\"ROLE_USER\"]}"));
     }
@@ -73,8 +74,15 @@ public class UserControllerAccessTest {
     @Test
     @WithMockUser(username = "selfUser", roles = {"UNVERIFIED"})
     public void getSelf_asRoleUnverified_accessDenied() throws Exception {
-        mvc.perform(get("/users/self"))
+        mvc.perform(get("/users/self").headers(buildCORSHeaders()))
                 .andExpect(status().isForbidden());
+    }
+
+    private HttpHeaders buildCORSHeaders() {
+        HttpHeaders httpHeaders = new HttpHeaders();
+        httpHeaders.add("X-Requested-With", "JUNIT");
+        httpHeaders.add("Origin", "http://myurl.com");
+        return httpHeaders;
     }
 
 }
