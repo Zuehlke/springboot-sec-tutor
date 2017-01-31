@@ -48,27 +48,27 @@ Mostly the SSL is terminated on the Loadbalancer. AWS lets you create signed cer
 - Scalable
 
 #### Cons
-- Not truly end-to-end if terminated on LB (see [http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/configuring-https-endtoend.html])
-- Configuration. You can choose from predefined set of SSL Security Policies or configure it via command line or JSON (see [https://mozilla.github.io/server-side-tls/ssl-config-generator/] and choose AWS LB)
+- Not truly end-to-end if terminated on LB (see [AWS ELB End-to-End](http://docs.aws.amazon.com/elasticbeanstalk/latest/dg/configuring-https-endtoend.html))
+- Configuration. You can choose from predefined set of SSL Security Policies or configure it via command line or JSON (see [SSL config generator](https://mozilla.github.io/server-side-tls/ssl-config-generator/) and choose AWS LB)
 
 ### SSL configuration
 Now that the implementing part is known, the question is what to consider a secure SSL config. Therefore you want to check the following sites:
-- [https://mozilla.github.io/server-side-tls/ssl-config-generator/] suggesting to use modern configuration (see for details and configure ciphers as wanted/required [https://wiki.mozilla.org/Security/Server_Side_TLS])
-- [https://weakdh.org/] if you use DH cipher then you should consider creating your own DHparams since the default are weak (this is only required if you use a DHE- cipher not for ECDHE- therefore you don't have to do this if you use 'modern' config above). Also check [https://weakdh.org/sysadmin.html] for creating/deploying customn DHparams.pem to your HTTP server.
-- [https://drownattack.com/] disable SSLv2 since its vulnerable to the DROWN attack. Instructions for some HTTP server can be found on the site.
-- [https://en.wikipedia.org/wiki/POODLE] disable SSLv3 since its vulnerable to the POODLE attack.
-- [https://en.wikipedia.org/wiki/CRIME_(security_exploit)] disable SSL compression since it is vulnerable to th CRIME attack (and others). For confiuration refer to your HTTP server documentation.
-- [http://breachattack.com/] disable HTTP compression since it is vulnerable to oracle attacks (e.g. BREACH). This is mostly default in the Servlet Containers. Don't enable it!
+- https://mozilla.github.io/server-side-tls/ssl-config-generator/ suggesting to use modern configuration (see for details and configure ciphers as wanted/required [Mozilla Cipher List](https://wiki.mozilla.org/Security/Server_Side_TLS))
+- https://weakdh.org/ if you use DH cipher then you should consider creating your own DHparams since the default are weak (this is only required if you use a DHE- cipher not for ECDHE- therefore you don't have to do this if you use 'modern' config above). Also check [weakdh.org sysadmin guide](https://weakdh.org/sysadmin.html) for creating/deploying customn DHparams.pem to your HTTP server.
+- https://drownattack.com/ disable SSLv2 since its vulnerable to the DROWN attack. Instructions for some HTTP server can be found on the site.
+- https://en.wikipedia.org/wiki/POODLE disable SSLv3 since its vulnerable to the POODLE attack.
+- https://en.wikipedia.org/wiki/CRIME_(security_exploit) disable SSL compression since it is vulnerable to th CRIME attack (and others). For confiuration refer to your HTTP server documentation.
+- http://breachattack.com/ disable HTTP compression since it is vulnerable to oracle attacks (e.g. BREACH). This is mostly default in the Servlet Containers. Don't enable it!
 
 For apache documentation refer to:
-- [http://httpd.apache.org/docs/trunk/ssl/ssl_howto.html] example apache ssl configuration (including TSLv1.2 only, SSLCompression, SSLHonorCipherOrder, SSLSessionTickets)
+- http://httpd.apache.org/docs/trunk/ssl/ssl_howto.html example apache ssl configuration (including TSLv1.2 only, SSLCompression, SSLHonorCipherOrder, SSLSessionTickets)
 
 For AWS LB HTTPS configuration refer to:
-- [http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-add-or-delete-listeners.html] how to add a certificate to you LB
-- [http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-ssl-security-policy.html] ssl configuration
+- http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-add-or-delete-listeners.html how to add a certificate to you LB
+- http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/elb-ssl-security-policy.html ssl configuration
 
 ### SSL security check **Important**!
-Once the configuration is done and you think you did everything right, its time to face the truth. Deploy your app and check your ssl configuration with [https://www.ssllabs.com/ssltest/]. Fix configuration until you have at least an A mark (or better A+).
+Once the configuration is done and you think you did everything right, its time to face the truth. Deploy your app and check your ssl configuration with https://www.ssllabs.com/ssltest/. Fix configuration until you have at least an A mark (or better A+).
 
 ## [Authentication (who you are)](#authentication)
 Most applications need authorization (what is who allowed to do). Authentication is precondition for authorization since you need to make sure who the application is interacting with. 
@@ -90,7 +90,7 @@ protected void configure(HttpSecurity http) throws Exception {
 }
 ```
 
-The `formLogin()` does it all. This means that the form will be rendered by spring boot (default login template). If you want to have another template you can specify it with `loginPage("/login")` and have a View "login" configured (see [http://docs.spring.io/spring-security/site/docs/current/guides/html5/form-javaconfig.html#configuring-a-custom-login-page] for details).
+The `formLogin()` does it all. This means that the form will be rendered by spring boot (default login template). If you want to have another template you can specify it with `loginPage("/login")` and have a View "login" configured (see http://docs.spring.io/spring-security/site/docs/current/guides/html5/form-javaconfig.html#configuring-a-custom-login-page for details).
 If you plan to use the spring boot app only as backend then I recommend to use **REST Authentication Login**. Why? Well because else it results in having to deal with the CSRF-TOKEN by yourself.
 **DO NOT DISABLE CSRF IF YOU HAVE A FORM LOGIN LIKE THIS**
 
@@ -105,14 +105,14 @@ This is recommended when you use spring boot as a backend service only. An examp
 Meaning CSRF prevention may have to be dealt with by yourself.
 
 #### CSRF prevention
-There are more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). Spring uses the "Synchronizer Token" per default. This is also used in the Formlogin above. But since we can't render the Token with spring into a form we must find another way to prevent CSRF attacks.
+There are more than one strategy that you can choose from to prevent CSRF (see https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet). Spring uses the "Synchronizer Token" per default. This is also used in the Formlogin above. But since we can't render the Token with spring into a form we must find another way to prevent CSRF attacks.
 
-The easiest way for that is to use spring's `CookieCsrfTokenRepository` with `csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())` which implements the "Double Submit Cookie" strategy and works as default with AngularJS and therefore is a really nice solution. Be aware that your frontend and backend must have the same Origin, if you have different Origins for the frontend and backend the frontend will not be able to read the backend Cookies through `document.cookie` even if you configured CORS. The Cookies will follow SoP (Same-origin Policy) (see [https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials]).
+The easiest way for that is to use spring's `CookieCsrfTokenRepository` with `csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())` which implements the "Double Submit Cookie" strategy and works as default with AngularJS and therefore is a really nice solution. Be aware that your frontend and backend must have the same Origin, if you have different Origins for the frontend and backend the frontend will not be able to read the backend Cookies through `document.cookie` even if you configured CORS. The Cookies will follow SoP (Same-origin Policy) (see https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials).
 If the Origins differ you have to correctly configure CORS (see CORS chapter) and implement a custom `CsrfTokenRepository` or your own `@RestController` (with e.g. /hello) which provides the Session-Token in a Header (but only in CORS-aware requests! Else you are not safe at all). 
 
 In the branch [rest-auth](https://github.com/Zuehlke/springboot-sec-tutor/tree/rest-auth) there is an implementation of "having a custom header" which need some Filters to be implemented but fits pretty good for a pure backend (no token handling and Origin of frontend doesn't have to be the same).
 For this we have to carefully configure CORS first. It needs to be done anyway to make your REST backend work with your frontend if the Origins differ!
-When we know CORS is configured correctly we need to make sure that all the request are not simple requests. Relying on CORS we know that if a custom header is present (e.g. X-Requested-With) the browser will either not make the response accessible or will preflight the request (for details see [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS] and [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Protecting_REST_Services:_Use_of_Custom_Request_Headers]).
+When we know CORS is configured correctly we need to make sure that all the request are not simple requests. Relying on CORS we know that if a custom header is present (e.g. X-Requested-With) the browser will either not make the response accessible or will preflight the request (for details see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS and https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet#Protecting_REST_Services:_Use_of_Custom_Request_Headers).
 To ensure browser's requests are CORS-aware this Header is required to be present for every request and therefore need a custom Filter `XRequestedWithHeaderFilter`:
 
 ```java
@@ -252,7 +252,7 @@ That's it for the custom Authentication.
 
 Be careful when implementing your REST services. If you for example change state with a GET, HEAD or OPTIONS request the security may be compromised (this also applies to non-persistent state like session-state).
 
-If you don't want to use Cookies as session identifier store you have to either include spring-session (see [http://docs.spring.io/spring-session/docs/current/reference/html5/guides/boot.html]) and e.g. use HeaderHttpSessionStrategy or you could implement another AuthenticationFilter to check the request for the valid Token (you might also think about disabling the creation of sessions with `sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)` if you have a custom AuthenticationFilter and don't need any other server (session) state). But be careful since cookies have securing mechanisms like secure, httpOnly, max-age etc. which you can't enforce when using another browser persistency mechanism.
+If you don't want to use Cookies as session identifier store you have to either include spring-session (see http://docs.spring.io/spring-session/docs/current/reference/html5/guides/boot.html) and e.g. use HeaderHttpSessionStrategy or you could implement another AuthenticationFilter to check the request for the valid Token (you might also think about disabling the creation of sessions with `sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)` if you have a custom AuthenticationFilter and don't need any other server (session) state). But be careful since cookies have securing mechanisms like secure, httpOnly, max-age etc. which you can't enforce when using another browser persistency mechanism.
 
 ### JWT
 We first have to look into JWT a bit. JWT is a signed Token and therefore can be checked by the signing party if it has originally signed it. 
@@ -267,7 +267,7 @@ Having a JWT here is convenient: It contains the claims (right to register, role
 ---
 
 ## [Authorization (what are you allowed to do)](#authorization)
-There are different ways to implement authorization. Here we will cover the role based authorization. If you want to have another type of access controll (authorization) then you can either implement your own `AccessDecisionManager` or an `AccessDecisionVoter` (see [http://docs.spring.io/spring-security/site/docs/current/reference/htmlsingle/#tech-intro-access-control]).
+There are different ways to implement authorization. Here we will cover the role based authorization. If you want to have another type of access controll (authorization) then you can either implement your own `AccessDecisionManager` or an `AccessDecisionVoter` (see http://docs.spring.io/spring-security/site/docs/current/reference/htmlsingle/#tech-intro-access-control).
 
 We can control which role can invoke which methods or call which URLs.
 The implementation of a domain model containing `Role` can be found in this repository. In our case users can have multiple roles and therefore is modeled as a many-to-many relationship and our role model is not hierarchical. Therefore one role (e.g. ADMIN) doesn't contain another role (e.g. USER).
@@ -304,7 +304,7 @@ There are two ways to restrict the access for a specific role (or multiple roles
 	```
 
 ### OAuth2
-When you implement an resource server and the authentication (and optionally authorization) is done by a different application then mostly OAuth2 is considered as solution. There are plenty of example implementations on the internet to find (e.g. [https://spring.io/guides/tutorials/spring-boot-oauth2/]) and that's why we will not cover an implementation.
+When you implement an resource server and the authentication (and optionally authorization) is done by a different application then mostly OAuth2 is considered as solution. There are plenty of example implementations on the internet to find (e.g. https://spring.io/guides/tutorials/spring-boot-oauth2/) and that's why we will not cover an implementation.
 
 ---
 
@@ -352,7 +352,7 @@ This repository does **NOT** contain any implementation to save encrypted data.
 ---
 
 ## [CORS (Cross-Origin Resource Sharing)](#cors)
-CORS was introduced to relax the SoP which prevents requests made by a script (e.g. AJAX request) that has been loaded by `www.a.com` to a backend `www.b.com`. So if the Origins of your frontend(s) and backend differ you have to configure CORS anyway because else browsers will block these calls. First you exactly want to know what CORS is and what headers it includes: [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS]
+CORS was introduced to relax the SoP which prevents requests made by a script (e.g. AJAX request) that has been loaded by `www.a.com` to a backend `www.b.com`. So if the Origins of your frontend(s) and backend differ you have to configure CORS anyway because else browsers will block these calls. First you exactly want to know what CORS is and what headers it includes: https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS
 
 Allright, so there are 2 ways to configure CORS in spring. You should combine both.
 1. Global CORS configuration
@@ -375,13 +375,13 @@ Allright, so there are 2 ways to configure CORS in spring. You should combine bo
 	can be used on class- and method-level in your controllers. 
 
 
-Actually there is a 3rd way to configure CORS (Filter). You can have a look at [http://docs.spring.io/spring/docs/current/spring-framework-reference/html/cors.html] if you figure its necessary to use the Filter.
+Actually there is a 3rd way to configure CORS (Filter). You can have a look at http://docs.spring.io/spring/docs/current/spring-framework-reference/html/cors.html if you figure its necessary to use the Filter.
 
 ---
 
 ## [HTTP Security Headers (Browsers defenses)](#http-security-headers)
 There are some HTTP Headers (set by your application) to control some security mechanisms of your user's browsers. Spring boot sends most of them per default and therefore provides a good basic security. We will quickly go through these headers and show how to enable/configure them in the `WebSecurityConfigurerAdapter`.
-Refer to [http://docs.spring.io/spring-security/site/docs/current/reference/html/headers.html] to discover all possibilities.
+Refer to http://docs.spring.io/spring-security/site/docs/current/reference/html/headers.html to discover all possibilities.
 
 ### Cache-Control
 Cache-Control header will advice the browser if the page should be cached. Usually you want to turn off the cache to prevent unauthorized attackers to access this cache through the browser history. Spring security disables the cache as default.
@@ -393,11 +393,11 @@ This header controls the browsers capability of guessing a resource's Content-Ty
 HSTS prevents the browsers to connect to this domain without SSL. Suggestion: Implement this header where you terminate your SSL connection (e.g. if you use HTTP Server like nginx your should adivce nginx to add this header instead of using spring to add it. Reason: single responsibility principle). If spring recognizes that the embedded servlet container only serves HTTPS this header is added automatically with some default values:
 `Strict-Transport-Security: max-age=31536000 ; includeSubDomains`
 
-To enable and ajust the HSTS you can use `headers().httpStrictTransportSecurity().maxAgeInSeconds(63072000).includeSubDomains(true)`. Unfortunately the requirements for the preload list is to have `preload` directive in the header (see [https://hstspreload.org/]) which cannot be added this way.
+To enable and ajust the HSTS you can use `headers().httpStrictTransportSecurity().maxAgeInSeconds(63072000).includeSubDomains(true)`. Unfortunately the requirements for the preload list is to have `preload` directive in the header (see https://hstspreload.org/) which cannot be added this way.
 
 **Be very careful when deploying this header: Browser will save this and you can't undo it.**
 ### Public-Key-Pins
-If for some reason your trust in CAs doesn't meet the requirements or you absolutely want to make sure that only a specific certificate is accepted by your client's browsers, then use HPKP. There are not too many good reasons to use HPKP (see [https://blog.qualys.com/ssllabs/2016/09/06/is-http-public-key-pinning-dead])! But if you know what you are doing and want to enable HPKP (which you should again only do in spring if you terminate the SSL connection in the embedded servlet container like HSTS), then you can do it like this:
+If for some reason your trust in CAs doesn't meet the requirements or you absolutely want to make sure that only a specific certificate is accepted by your client's browsers, then use HPKP. There are not too many good reasons to use HPKP (see https://blog.qualys.com/ssllabs/2016/09/06/is-http-public-key-pinning-dead)! But if you know what you are doing and want to enable HPKP (which you should again only do in spring if you terminate the SSL connection in the embedded servlet container like HSTS), then you can do it like this:
 ```java
 headers().
 	.httpPublicKeyPinning()
@@ -411,7 +411,7 @@ The `addSha256Pins` method takes a list of pins. The pins are actually base64-en
 
 `openssl x509 -pubkey < tls.crt | openssl pkey -pubin -outform der | openssl dgst -sha256 -binary | base64`
 
-to create a pin (see [https://scotthelme.co.uk/hpkp-http-public-key-pinning/] for details). You can pin any public key in the chain (e.g. CA's public key or intermediate certificate authority's public key).
+to create a pin (see https://scotthelme.co.uk/hpkp-http-public-key-pinning/ for details). You can pin any public key in the chain (e.g. CA's public key or intermediate certificate authority's public key).
 
 There is an example implementation in this repository (pinning embedded servlet containers certificate's public key).
 
@@ -426,7 +426,7 @@ Controls the XSS protection mechanism of the browser. Be aware that the browser'
 Do not relax this unless you really have to do it. Then you can use `headers().xssProtection().block(false).xssProtectionEnabled(true)` to relax it.
 
 ### Content-Security-Policy
-CSP allows you to control what content should be loaded/executed by the browsers. See [https://content-security-policy.com/] for the directives and sources that can be configured. The CSP may depend on the content that was loaded by a request but spring security currently only assits you with the global configuration. So if you want to use Annotations in your `@Controller`s to control the CSP header you have to implement that by yourself.
+CSP allows you to control what content should be loaded/executed by the browsers. See https://content-security-policy.com/ for the directives and sources that can be configured. The CSP may depend on the content that was loaded by a request but spring security currently only assits you with the global configuration. So if you want to use Annotations in your `@Controller`s to control the CSP header you have to implement that by yourself.
 For the global configuration use:
 
 `headers().contentSecurityPolicy("default-src 'self'; script-src 'self' 'unsafe-inline'; report-uri /csp")`
@@ -438,7 +438,7 @@ Spring security recognizes if the servlet container serves HTTPS and therefore m
 
 You should alway make sure that the session cookie has flags 'httpOnly' and 'secure'!
 
-*Hint:* All of the session cookie flags (domain, path, max-age, ...) can be configured through properties. See [https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html]
+*Hint:* All of the session cookie flags (domain, path, max-age, ...) can be configured through properties. See https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html
 
 ---
 
