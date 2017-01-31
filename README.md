@@ -1,5 +1,17 @@
 # springboot-sec-tutor
+
+## Table of content
+- Introduction
+- Transport Layer
+- Authentication (who you are)
+- Authorization (what are you allowed to do)
+- Data security
+- CORS (Cross-Origin Resource Sharing)
+- HTTP Security Headers (Browsers defenses)
+- Cookie Security
+
 ---
+
 ## Introduction
 This guide covers the security concerns about RESTful-backed applications. Spring boot is used to show example backend implementations of these concerns. Client implementations are not covered, only described. Furthermore guide covers browser defenses that should be implemented.
 
@@ -363,7 +375,8 @@ Allright, so there are 2 ways to configure CORS in spring. You should combine bo
 	can be used on class- and method-level in your controllers. 
 
 
-Actually there is a 3rd way to configure CORS (Filter). You can have a look at [http://docs.spring.io/spring/docs/current/spring-framework-reference/html/cors.html] if you figure its necessary.
+Actually there is a 3rd way to configure CORS (Filter). You can have a look at [http://docs.spring.io/spring/docs/current/spring-framework-reference/html/cors.html] if you figure its necessary to use the Filter.
+
 ---
 
 ## HTTP Security Headers (Browsers defenses)
