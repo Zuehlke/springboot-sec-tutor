@@ -438,6 +438,8 @@ Spring security recognizes if the servlet container serves HTTPS and therefore m
 
 You should alway make sure that the session cookie has flags 'httpOnly' and 'secure'!
 
+*Hint:* All of the session cookie flags (domain, path, max-age, ...) can be configured through properties. See [https://docs.spring.io/spring-boot/docs/current/reference/html/common-application-properties.html]
+
 ---
 
 That's it for this tutor!
