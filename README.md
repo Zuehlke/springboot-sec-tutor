@@ -95,7 +95,7 @@ Meaning CSRF prevention may have to be dealt with by yourself.
 #### CSRF prevention
 There are more than one strategy that you can choose from to prevent CSRF (see [https://www.owasp.org/index.php/Cross-Site_Request_Forgery_(CSRF)_Prevention_Cheat_Sheet]). Spring uses the "Synchronizer Token" per default. This is also used in the Formlogin above. But since we can't render the Token with spring into a form we must find another way to prevent CSRF attacks.
 
-The easiest way for that is to use spring's `CookieCsrfTokenRepository` with `csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())` which implements the "Double Submit Cookie" strategy and works as default with AngularJS and therefore is a really nice solution. Be aware that your frontend and backend must have the same Origin, if you have different Origins for the frontend and backend the frontend will not be able to read the backend Cookies through `document.cookie` even if you configured CORS. The Cookies will follow SOP (Same-origin Policy) (see [https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials]).
+The easiest way for that is to use spring's `CookieCsrfTokenRepository` with `csrf().csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())` which implements the "Double Submit Cookie" strategy and works as default with AngularJS and therefore is a really nice solution. Be aware that your frontend and backend must have the same Origin, if you have different Origins for the frontend and backend the frontend will not be able to read the backend Cookies through `document.cookie` even if you configured CORS. The Cookies will follow SoP (Same-origin Policy) (see [https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/withCredentials]).
 If the Origins differ you have to correctly configure CORS (see CORS chapter) and implement a custom `CsrfTokenRepository` or your own `@RestController` (with e.g. /hello) which provides the Session-Token in a Header (but only in CORS-aware requests! Else you are not safe at all). 
 
 In the branch [rest-auth](https://github.com/Zuehlke/springboot-sec-tutor/tree/rest-auth) there is an implementation of "having a custom header" which need some Filters to be implemented but fits pretty good for a pure backend (no token handling and Origin of frontend doesn't have to be the same).
@@ -339,6 +339,33 @@ This repository does **NOT** contain any implementation to save encrypted data.
 
 ---
 
+## CORS (Cross-Origin Resource Sharing)
+CORS was introduced to relax the SoP which prevents requests made by a script (e.g. AJAX request) that has been loaded by `www.a.com` to a backend `www.b.com`. So if the Origins of your frontend(s) and backend differ you have to configure CORS anyway because else browsers will block these calls. First you exactly want to know what CORS is and what headers it includes: [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS]
+
+Allright, so there are 2 ways to configure CORS in spring. You should combine both.
+1. Global CORS configuration
+	```java
+	@Configuration
+	public class GlobalCorsConfig extends WebMvcConfigurerAdapter {
+		@Override
+		public void addCorsMappings(CorsRegistry registry) {
+			registry.addMapping("/**")
+				.allowedOrigins("http://myurl.com")
+				.allowedMethods("GET", "POST");
+		}
+	}
+	```
+	This will be your general CORS configuration which spring will combine with following rules found for the request:
+2. Annotation-based CORS configuration (fine-grained)
+	```java
+	@CrossOrigin(origins = "http://myfrontend.com", methods = {RequestMethod.GET, RequestMethod.POST}, allowCredentials = "true", maxAge = 3600)
+	```
+	can be used on class- and method-level in your controllers. 
+
+
+Actually there is a 3rd way to configure CORS (Filter). You can have a look at [http://docs.spring.io/spring/docs/current/spring-framework-reference/html/cors.html] if you figure its necessary.
+---
+
 ## HTTP Security Headers (Browsers defenses)
 There are some HTTP Headers (set by your application) to control some security mechanisms of your user's browsers. Spring boot sends most of them per default and therefore provides a good basic security. We will quickly go through these headers and show how to enable/configure them in the `WebSecurityConfigurerAdapter`.
 Refer to [http://docs.spring.io/spring-security/site/docs/current/reference/html/headers.html] to discover all possibilities.
@@ -399,30 +426,5 @@ Spring security recognizes if the servlet container serves HTTPS and therefore m
 You should alway make sure that the session cookie has flags 'httpOnly' and 'secure'!
 
 ---
-
-## CORS (Cross-Origin Resource Sharing)
-CORS was introduced to relax the SoP which prevents requests made by a script (e.g. AJAX request) that has been loaded by `www.a.com` to a backend `www.b.com`. So if the Origins of your frontend(s) and backend differ you have to configure CORS anyway because else browsers will block these calls. First you exactly want to know what CORS is and what headers it includes: [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS]
-
-Allright, so there are 2 ways to configure CORS in spring. You should combine both.
-1. Global CORS configuration
-	```java
-	@Configuration
-	public class GlobalCorsConfig extends WebMvcConfigurerAdapter {
-		@Override
-		public void addCorsMappings(CorsRegistry registry) {
-			registry.addMapping("/**")
-				.allowedOrigins("http://myurl.com")
-				.allowedMethods("GET", "POST");
-		}
-	}
-	```
-	This will be your general CORS configuration which spring will combine with following rules found for the request:
-2. Annotation-based CORS configuration
-	```java
-	@CrossOrigin(origins = "http://myfrontend.com", methods = {RequestMethod.GET, RequestMethod.POST}, allowCredentials = "true", maxAge = 3600)
-	```
-	can be used on class- and method-level in your controllers. 
-
-
 
 That's it for this tutor!
