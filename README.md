@@ -12,10 +12,10 @@
 
 ---
 
-## Introduction
+## [Introduction](#introduction)
 This guide covers the security concerns about RESTful-backed applications. Spring boot is used to show example backend implementations of these concerns. Client implementations are not covered, only described. Furthermore this guide covers browser defenses that should be implemented/configured.
 
-## Transport Layer
+## [Transport Layer](#transport-layer)
 First to think about is whether to use SSL and for what services to use it (e.g. static resources). SSL should always be used when your application involves authentication. Hence at least your authentication process and the restricted part of the application should be restricted to SSL (HTTPS) connections only. The reason is pretty obvious: Prevention of account- and session-hijacking through man-in-the-middle attacks.
 
 As you will probably always require SSL for at least some services of your application. The question is where to implement it. Therefore there are some examples with pros and cons:
@@ -70,7 +70,7 @@ For AWS LB HTTPS configuration refer to:
 ### SSL security check **Important**!
 Once the configuration is done and you think you did everything right, its time to face the truth. Deploy your app and check your ssl configuration with [https://www.ssllabs.com/ssltest/]. Fix configuration until you have at least an A mark (or better A+).
 
-## Authentication (who you are)
+## [Authentication (who you are)](#authentication)
 Most applications need authorization (what is who allowed to do). Authentication is precondition for authorization since you need to make sure who the application is interacting with. 
 There are different ways to implement authentication in spring boot, each having their pros and cons.
 
@@ -266,7 +266,7 @@ Having a JWT here is convenient: It contains the claims (right to register, role
 
 ---
 
-## Authorization (what are you allowed to do)
+## [Authorization (what are you allowed to do)](#authorization)
 There are different ways to implement authorization. Here we will cover the role based authorization. If you want to have another type of access controll (authorization) then you can either implement your own `AccessDecisionManager` or an `AccessDecisionVoter` (see [http://docs.spring.io/spring-security/site/docs/current/reference/htmlsingle/#tech-intro-access-control]).
 
 We can control which role can invoke which methods or call which URLs.
@@ -308,7 +308,7 @@ When you implement an resource server and the authentication (and optionally aut
 
 ---
 
-## Data security
+## [Data security](#data-security)
 
 ### Passwords
 There is at least some part of data that should be secured by your application: Passwords. For this you should use a cryptographic hash function. Check [OWASP Password Storage Cheat Sheet](https://www.owasp.org/index.php/Password_Storage_Cheat_Sheet) and decide on which one-way function to use.
@@ -351,7 +351,7 @@ This repository does **NOT** contain any implementation to save encrypted data.
 
 ---
 
-## CORS (Cross-Origin Resource Sharing)
+## [CORS (Cross-Origin Resource Sharing)](#cors)
 CORS was introduced to relax the SoP which prevents requests made by a script (e.g. AJAX request) that has been loaded by `www.a.com` to a backend `www.b.com`. So if the Origins of your frontend(s) and backend differ you have to configure CORS anyway because else browsers will block these calls. First you exactly want to know what CORS is and what headers it includes: [https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS]
 
 Allright, so there are 2 ways to configure CORS in spring. You should combine both.
@@ -379,7 +379,7 @@ Actually there is a 3rd way to configure CORS (Filter). You can have a look at [
 
 ---
 
-## HTTP Security Headers (Browsers defenses)
+## [HTTP Security Headers (Browsers defenses)](#http-security-headers)
 There are some HTTP Headers (set by your application) to control some security mechanisms of your user's browsers. Spring boot sends most of them per default and therefore provides a good basic security. We will quickly go through these headers and show how to enable/configure them in the `WebSecurityConfigurerAdapter`.
 Refer to [http://docs.spring.io/spring-security/site/docs/current/reference/html/headers.html] to discover all possibilities.
 
@@ -431,7 +431,7 @@ For the global configuration use:
 
 `headers().contentSecurityPolicy("default-src 'self'; script-src 'self' 'unsafe-inline'; report-uri /csp")`
 
-## Cookie Security
+## [Cookie Security](#cookie-security)
 Spring security recognizes if the servlet container serves HTTPS and therefore marks the session cookie (JSESSIONID) as secure automatically. But if you terminate your SSL on e.g. apache then spring can't know if the request was served over an SSL tunnel. To set the 'secure' flag on the cookie add the following to your `application.properties`:
 
 `server.session.cookie.secure=true`
